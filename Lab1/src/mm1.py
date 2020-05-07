@@ -149,7 +149,7 @@ def main():
 
     # print output data
     print("MEASUREMENTS \n\nNo. of users in the queue:", users, "\nNo. of arrivals =",
-      data.arr, "- No. of departures =", data.dep)
+      data.arr, "/ No. of departures =", data.dep)
 
 
 
@@ -160,13 +160,13 @@ def main():
 
     if data.dep != 0:
         print("Average delay: ", data.delay / data.dep)
-    print("Actual queue size: ", Q.qsize())
+    print("Actual queue size (packets lost): ", Q.qsize())
 
     if not Q.empty():
         print("Arrival time of the last element in the queue:", Q.get().arrival_time)
 
-    return client, server
+    return client, server, data
 
 if __name__ == '__main__':
-    client, server = main()
+    client, server, data = main()
 
