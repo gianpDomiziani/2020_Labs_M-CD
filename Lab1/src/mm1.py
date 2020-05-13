@@ -1,13 +1,16 @@
 import random
+import numpy as np
 from queue import Queue, PriorityQueue
 import matplotlib.pyplot as plt
+from runstats import Statistics
 
+stats = Statistics()
 # ******************************************************************************
 # Constants
 # ******************************************************************************
-LOAD = 0.85
+ARRIVAL = 7  # av inter-arrival time
 SERVICE = 10.0  # av service time
-ARRIVAL = SERVICE / LOAD  # av inter-arrival time
+LOAD = ARRIVAL / SERVICE  # Load factor
 TYPE1 = 1
 
 SIM_TIME = 500000
@@ -27,8 +30,8 @@ FES = PriorityQueue()
 
 class Measure:
     def __init__(self, Narr=0, Ndep=0, NAveraegUser=0, OldTimeEvent=0, AverageDelay=0):
-        self.arr = Narr
-        self.dep = Ndep
+        self.arr = Statistics()
+        self.dep =
         self.ut = NAveraegUser
         self.oldT = OldTimeEvent
         self.delay = AverageDelay
@@ -153,7 +156,7 @@ def main():
 
 
 
-    print("Load: ", SERVICE / ARRIVAL)
+    print("Load: ", LOAD)
     print("\nArrival rate: ", data.arr / client.arrival_time, " - Departure rate: ", data.dep / server.time)
 
     print("\nAverage number of users: ", data.ut / client.arrival_time)
@@ -167,6 +170,9 @@ def main():
 
     return client, server, data
 
+#=======================================================================================================================
+# Indicators: E[N]=E[lambda]E[T], E[T]=rho/[lambda(1-rho)], E[N]=rho/(1-rho), lambda=µ/rho
+#=======================================================================================================================
 if __name__ == '__main__':
     client, server, data = main()
 
