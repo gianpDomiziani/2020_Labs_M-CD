@@ -94,11 +94,20 @@ def state_distributionMM1(lambd, mu, N=10):
     """
 
     rho = float(lambd/mu)
+    L = rho/(1-rho)
+    W = L/lambd
     p0 = 1-rho
     n = np.arange(N)
     pn = np.reshape(p0*(rho**n), (N, 1))
     return pn
 
+def average_time_in_queue(lambd, mu):
+
+    rho = lambd/mu
+    L = rho/(1-rho)
+    W = L/lambd
+
+    return W
 
 # *******************************************************************************
 # main
@@ -108,7 +117,7 @@ if __name__ == '__main__':
     random.seed(RANDOM_SEED)  # same sequence each time
 
     mu = 10  # 2 customer on average per unit time (service time)
-    LAMBDA = 10  # one customer enter per time (arrival time)
+    LAMBDA = 9  # one customer enter per time (arrival time)
     STATE = 10
     response_time = []
 
@@ -124,6 +133,7 @@ if __name__ == '__main__':
 
     # start the arrival process
     pn_ls = []
+    W_ls = []
     for j in range(LAMBDA):
         env = simpy.Environment()
         stats = Statistics()
@@ -132,6 +142,7 @@ if __name__ == '__main__':
         # simulate until SIM_TIME
         env.run(until=SIM_TIME)
         response_time.append(stats.mean())
+        W_ls.append(average_time_in_queue(lambd=j+1, mu=mu))
         pn_ls.append(state_distributionMM1(lambd=j+1, mu=mu, N=STATE))
         plt.figure()
         plt.title(f'M/M/{NUM_SERVERS} state distribution, LAMBDA={j+1}, mu={mu}')
@@ -148,6 +159,14 @@ if __name__ == '__main__':
     plt.plot(np.arange(1, LAMBDA + 1), np.array(response_time))
     plt.xlabel("arrival rate")
     plt.ylabel("mean response time")
+    plt.grid()
+    plt.show()
+
+    plt.figure()
+    plt.title(f'Average time in the queue: M/M/{NUM_SERVERS}, service rate: {mu}')
+    plt.plot(np.arange(1, LAMBDA + 1), np.array(W_ls))
+    plt.xlabel("arrival rate")
+    plt.ylabel("E[T]")
     plt.grid()
     plt.show()
 
