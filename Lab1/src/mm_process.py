@@ -84,6 +84,22 @@ class Servers(object):
             yield self.env.timeout(service_time)
 
 
+def state_distributionMM1(lambd, mu, N=10):
+    """
+    Compute the steady-state probability distribution for a M/M/1 queue: with assumption rho= LAMBDA/mu < 1.
+    :param lambd: Interarrival time
+    :param mu: Service Time
+    :param N: number of states
+    :return: steady-state probability distribution
+    """
+
+    rho = float(lambd/mu)
+    p0 = 1-rho
+    n = np.arange(N)
+    pn = np.reshape(p0*(rho**n), (N, 1))
+    return pn
+
+
 # *******************************************************************************
 # main
 # *******************************************************************************
@@ -91,8 +107,9 @@ if __name__ == '__main__':
 
     random.seed(RANDOM_SEED)  # same sequence each time
 
-    mu = 20  # 2 customer on average per unit time (service time)
-    lambd = 10  # one customer enter per time (arrival time)
+    mu = 10  # 2 customer on average per unit time (service time)
+    LAMBDA = 10  # one customer enter per time (arrival time)
+    STATE = 10
     response_time = []
 
     # *********************************
@@ -106,7 +123,8 @@ if __name__ == '__main__':
     # env.servers = Servers(env, NUM_SERVERS, mu)  # service
 
     # start the arrival process
-    for j in range(lambd):
+    pn_ls = []
+    for j in range(LAMBDA):
         env = simpy.Environment()
         stats = Statistics()
         env.servers = Servers(env, NUM_SERVERS, mu)  # service
@@ -114,12 +132,22 @@ if __name__ == '__main__':
         # simulate until SIM_TIME
         env.run(until=SIM_TIME)
         response_time.append(stats.mean())
+        pn_ls.append(state_distributionMM1(lambd=j+1, mu=mu, N=STATE))
+        plt.figure()
+        plt.title(f'M/M/{NUM_SERVERS} state distribution, LAMBDA={j+1}, mu={mu}')
+        plt.plot(np.arange(1, STATE+1), pn_ls[j])
+        plt.xlabel('state')
+        plt.ylabel('p(n)')
+        plt.grid()
+        plt.show()
+
 
     print(response_time)
     plt.figure()
     plt.title(f'M/M/{NUM_SERVERS}, service rate: {mu}')
-    plt.plot(np.arange(1, lambd + 1), np.array(response_time))
+    plt.plot(np.arange(1, LAMBDA + 1), np.array(response_time))
     plt.xlabel("arrival rate")
     plt.ylabel("mean response time")
     plt.grid()
     plt.show()
+
