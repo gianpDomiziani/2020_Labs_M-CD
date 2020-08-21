@@ -12,7 +12,7 @@ from queue import Queue, PriorityQueue
 BUFFER_SIZES = [9999999]
 N_SERVERS_POSSIBILITIES = [1]
 ASSIGN_STRATEGIES = ["random"]
-SERVER_COSTS = [1]
+SERVER_COSTS = [1]  # is it mu?
 LOADS = np.arange(0.1, 3.1, 0.1)
 SIM_TIME = 50000
 
@@ -69,7 +69,8 @@ class Server(object):
     def startJob(self, time):
         if self.is_busy:
             raise Exception("server " + str(self.index) + " is busy")
-        self.jobs_history.append({"start":time, "end":time})
+        # Why start == end ?? just for init
+        self.jobs_history.append({"start": time, "end": time})
         self.is_busy = True
 
     def finishJob(self, time):
@@ -120,7 +121,7 @@ def arrival(time, FES, queue, strategy):
 
     # cumulate statistics
     data.arr += 1
-    data.ut += users*(time-data.oldT)
+    data.ut += users*(time-data.oldT) # ??
     data.oldT = time
 
     # sample the time until the next event
@@ -130,7 +131,7 @@ def arrival(time, FES, queue, strategy):
     FES.put((time + inter_arrival, "arrival"))
 
     # create a record for the client
-    client = Client(TYPE1,time)
+    client = Client(TYPE1, time)
 
     # insert the record in the queue
     if (len(queue) + 1) <= BUFFER_SIZE:
@@ -219,10 +220,10 @@ for N_SERVERS in N_SERVERS_POSSIBILITIES:
     for ASSIGN_STRATEGY in ASSIGN_STRATEGIES:
         for LOAD in LOADS:
             for BUFFER_SIZE in BUFFER_SIZES:
-                ARRIVAL = SERVICE/LOAD
-                arrivals=0
-                users=0
-                MM1=[]
+                ARRIVAL = SERVICE/LOAD # ?? rho = lambda/mu
+                arrivals = 0
+                users = 0
+                MM1 = []
                 cluster = Cluster(N_SERVERS)
 
                 random.seed(42)
