@@ -15,20 +15,23 @@ import scipy.stats
 # ******************************************************************************
 #BUFFER_SIZES = [1,2,3,4,9999999]
 BUFFER_SIZES = [9999999]
-N_SERVERS_POSSIBILITIES = [10]
+N_SERVERS_POSSIBILITIES = [10,15]
 ASSIGN_STRATEGIES = ["random"]
 #ARRIVAL_RATES = np.arange(0.1, 3.1, 0.1)
-INTER_ARRIVAL_TIMES = [5]
-SIM_TIME = 23*60*1
+INTER_ARRIVAL_TIMES_BY_HOUR = [30,30,30,30,30,30,30,15,15,15,15,20,20,20,15,15,20,20,15,15,20,20,20,20,20,20]
+INTER_ARRIVAL_TIMES = [INTER_ARRIVAL_TIMES_BY_HOUR]
+INTER_ARRIVAL_BTH_THRESHOLD = 15
+SIM_TIME = 23*60*0.9
 W_MAX=5
-B_THS = [0.5,0.75,0.8,1]
-CHARGING_TIME=90
-N_PANELS = [0]
+B_THS = [1]
+#B_THS = [0.5,0.75,0.85,1]
+CHARGING_TIME=180
 CHARGE_RATE = 40000/(CHARGING_TIME/60)
 TYPE1 = 1
-N_RUNS = 1000
-T_MAX_VALUES = [0]
-F_MAX_POSTPONED_VALUES = [0]
+N_RUNS = 10
+N_PANELS = [100,200]
+T_MAX_VALUES = [5,20]
+F_MAX_POSTPONED_VALUES = [0.2, 0.4]
 PV_POWER_WINTER = [0,0,0,0,0,0,0,0,9.645,80.677,172.659,243.886,269.087,242.486,173.262,84.253,15.09,0,0,0,0,0,0,0,0,0,0,0]
 PV_POWER_SUMMER = [0,0,0,0,0,0,41.589,116.609,216.396,331.316,433.069,527.339,566.713,540.398,457.354,349.654,229.43,125.402,48.569,2.294,0,0,0,0,0,0,0,0]
 EL_COST_SUMMER = [57.24847826,54.1075,52.35195652,52.21402174,53.5975,57.72945652,60.32108696,63.12086957,63.40347826,62.52836957,61.35467391,58.35054348,57.58119565,59.09793478,60.60402174,63.17336957,63.82576087,65.45532609,67.84032609,68.1751087,67.53445652,64.61956522,60.71923913,61.02456522,57.24847826,54.1075,52.35195652,52.21402174]
@@ -54,6 +57,10 @@ class Measure:
         self.delayes = []
         self.departure_times = []
         self.rejects_times = []
+        self.n_servers = 0
+        self.n_panel = 0
+        self.f_max = 0
+        self.t_max = 0
 
 
 class ServerMeasure:
@@ -103,11 +110,14 @@ class SwitchingServer(object):
             raise Exception("server " + str(self.index) + " is not processing customers")
         self.jobs_history[-1]["end"] = time
         self.is_busy = False
-        self.finish_time = time + (CHARGING_TIME * B_TH)
+        bth = 1
+        if ARRIVAL_BY_HOUR[math.floor(time/60)] <= INTER_ARRIVAL_BTH_THRESHOLD:
+            bth = B_TH
+        self.finish_time = time + (CHARGING_TIME * bth)
 
-        avg_charging_cost = np.mean(np.array(PRICES)/(10**6))*(CHARGING_TIME/60)*CHARGE_RATE*0.5
+        avg_charging_cost = np.mean(np.array(PRICES)/(10**6))*(CHARGING_TIME/60)*CHARGE_RATE*0.5*bth
 
-        if ((data.n_charging_postponed + 1) * 100)/data.dep <= F_MAX_POSTPONED:
+        if (data.n_charging_postponed + 1)/data.dep <= F_MAX_POSTPONED:
             for shift in range(1, T_MAX):
                 remaining = pv_grid.predictPowerUsage(CHARGE_RATE, time + shift, self.finish_time + shift)
                 if self.getTotalCost(remaining) <= avg_charging_cost:
@@ -126,12 +136,6 @@ class SwitchingServer(object):
             cost_per_minute = PRICES[math.floor(min/60)]/60
             cost += cost_per_minute / (10**6) * remaining[min]
         return cost
-
-    def getTotalBusyTime(self):
-        return sum([job["end"] - job["start"] for job in self.jobs_history])
-
-    def getTotalAssignedJobs(self):
-        return len(self.jobs_history)
 
 class PvGrid():
     def __init__(self, n_panels, kwps):
@@ -201,6 +205,7 @@ def arrival(time, FES, queue, strategy):
     data.oldT = time
 
     # sample the time until the next event
+    ARRIVAL = ARRIVAL_BY_HOUR[math.floor(time/60)]
     inter_arrival = random.expovariate(lambd=1.0/ARRIVAL)
 
     # schedule the next arrival
@@ -309,8 +314,22 @@ def plotFisherman():
     plt.xlabel("time (min)")
     plt.show()
 
-def missedServicesResults():
-    rejects_mean =
+def missedServicesResults(measures):
+    df = pd.DataFrame({"delay":[e.avg_delay for e in measures], "loss_prob": [e.loss_prob for e in measures], "b_th": [e.b_th for e in measures]}).groupby("b_th")
+    for name, group in df:
+        avg_delay = group["delay"].mean()
+        avg_loss = group["loss_prob"].mean()
+        print("missedServicesResults bth: ",name," delay: ",avg_delay," loss prob: ",avg_loss )
+
+def totalCostResults(measures):
+    df = pd.DataFrame({"cost":[e.cost for e in measures],"n_server": [e.n_servers for e in measures],"t_max": [e.t_max for e in measures],"f_max": [e.f_max for e in measures],"n_panel": [e.n_panel for e in measures],"perc_postponed": [e.perc_postponed for e in measures],"loss_prob": [e.loss_prob for e in measures]})\
+        .groupby(["t_max","f_max","n_panel","n_server"])
+    for name, group in df:
+        avg_cost = group["cost"].mean()
+        avg_perc_postponed = group["perc_postponed"].mean()
+        avg_loss_prob = group["loss_prob"].mean()
+        #print("totalCostResults cost ",avg_cost," t_max ",name[0]," f_max ",name[1]," n_panel ",name[2]," n_server ", name[3])
+        print(str(avg_cost)+";"+str(name[0])+";"+str(name[1])+";"+str(name[2])+";"+str(name[3])+";"+str(avg_perc_postponed*100)+";"+str(avg_loss_prob))
 
 # ******************************************************************************
 # the "main" of the simulation
@@ -322,74 +341,79 @@ all_runs_avg_delay = []
 all_runs_ci = []
 all_runs_loss_prob = []
 all_runs_measures = []
-for run in range(N_RUNS):
-    for N_SERVERS in N_SERVERS_POSSIBILITIES:
-        for ASSIGN_STRATEGY in ASSIGN_STRATEGIES:
-            for ARRIVAL in INTER_ARRIVAL_TIMES:
-                for BUFFER_SIZE in BUFFER_SIZES:
-                    for B_TH in B_THS:
-                        for F_MAX_POSTPONED in F_MAX_POSTPONED_VALUES:
-                                for T_MAX in T_MAX_VALUES:
+
+for N_SERVERS in N_SERVERS_POSSIBILITIES:
+    for ASSIGN_STRATEGY in ASSIGN_STRATEGIES:
+        for ARRIVAL_BY_HOUR in INTER_ARRIVAL_TIMES:
+            for BUFFER_SIZE in BUFFER_SIZES:
+                for B_TH in B_THS:
+                    for F_MAX_POSTPONED in F_MAX_POSTPONED_VALUES:
+                            for T_MAX in T_MAX_VALUES:
                                     for N_PANEL in N_PANELS:
-                                        #random.seed(42)
+                                        for run in range(N_RUNS):
+                                            #random.seed(42)
 
-                                        arrivals=0
-                                        users=0
-                                        MM1=[]
-                                        pv_grid = PvGrid(N_PANEL,PV_POWER)
-                                        charging_station = ChargingStation(N_SERVERS,pv_grid)
+                                            arrivals=0
+                                            users=0
+                                            MM1=[]
+                                            pv_grid = PvGrid(N_PANEL,PV_POWER)
+                                            charging_station = ChargingStation(N_SERVERS,pv_grid)
 
-                                        data = Measure(0,0,0,0,0)
+                                            data = Measure(0,0,0,0,0)
 
-                                        # the simulation time
-                                        time = 0
+                                            # the simulation time
+                                            time = 0
 
-                                        # the list of events in the form: (time, type)
-                                        FES = PriorityQueue()
+                                            # the list of events in the form: (time, type)
+                                            FES = PriorityQueue()
 
-                                        # schedule the first arrival at t=0
-                                        FES.put((0, "arrival"))
+                                            # schedule the first arrival at t=0
+                                            FES.put((0, "arrival"))
 
-                                        # simulate until the simulated time reaches a constant
-                                        while time < SIM_TIME:
-                                            (time, event_type) = FES.get()
+                                            # simulate until the simulated time reaches a constant
+                                            while time < SIM_TIME:
+                                                (time, event_type) = FES.get()
 
-                                            # if event_type == "arrival_charged_battery":
-                                            #     arrivalChargedBattery(time, FES, MM1, ASSIGN_STRATEGY)
+                                                # if event_type == "arrival_charged_battery":
+                                                #     arrivalChargedBattery(time, FES, MM1, ASSIGN_STRATEGY)
 
-                                            if event_type == "arrival":
-                                                arrival(time, FES, MM1, ASSIGN_STRATEGY)
+                                                if event_type == "arrival":
+                                                    arrival(time, FES, MM1, ASSIGN_STRATEGY)
 
-                                            elif "departure" in event_type:
-                                                departure(time, FES, MM1, int(event_type.split("_")[1]), ASSIGN_STRATEGY)
+                                                elif "departure" in event_type:
+                                                    departure(time, FES, MM1, int(event_type.split("_")[1]), ASSIGN_STRATEGY)
 
-                                        data.n_servers = N_SERVERS
-                                        data.buffer_size = BUFFER_SIZE
-                                        data.assign_strategy = ASSIGN_STRATEGY
-                                        data.users = users
-                                        data.arrival_rate = data.arr/time
-                                        data.departure_rate = data.dep/time
-                                        data.avg_users = data.ut/time
-                                        data.avg_delay = data.delay/data.dep
-                                        all_runs_avg_delay.append(data.avg_delay)
-                                        data.avg_waiting_time = data.waiting_time/data.dep
-                                        data.final_queue_size = len(MM1)
-                                        data.loss_prob = data.rejects * 100 / data.arr
-                                        all_runs_loss_prob.append(data.loss_prob)
-                                        data.time = time
-                                        data.avg_cost = data.cost/data.dep
+                                            data.n_servers = N_SERVERS
+                                            data.t_max = T_MAX
+                                            data.f_max = F_MAX_POSTPONED
+                                            data.n_panel = N_PANEL
+                                            data.buffer_size = BUFFER_SIZE
+                                            data.assign_strategy = ASSIGN_STRATEGY
+                                            data.users = users
+                                            data.arrival_rate = data.arr/time
+                                            data.departure_rate = data.dep/time
+                                            data.avg_users = data.ut/time
+                                            data.avg_delay = data.delay/data.dep
+                                            all_runs_avg_delay.append(data.avg_delay)
+                                            data.avg_waiting_time = data.waiting_time/data.dep
+                                            data.final_queue_size = len(MM1)
+                                            data.loss_prob = data.rejects * 100 / data.arr
+                                            all_runs_loss_prob.append(data.loss_prob)
+                                            data.time = time
+                                            data.avg_cost = data.cost/data.dep
+                                            data.b_th = B_TH
+                                            data.perc_postponed = data.n_charging_postponed/data.dep
 
-                                        # for server in charging_station.servers:
-                                        #     server_measure = ServerMeasure(server.index, server.getTotalBusyTime(), server.getTotalBusyTime()*100/time, server.getTotalAssignedJobs(), server.getTotalAssignedJobs() * 100/data.dep)
-                                        #     data.server_measures.append(server_measure)
+                                            measures.append(data)
+                                            all_runs_measures.append(data)
+                                            #printMeasures(data)
+                                            # if len(MM1)>0:
+                                            #     print("Arrival time of the last element in the queue:",MM1[len(MM1)-1].arrival_time)
 
-                                        measures.append(data)
-                                        all_runs_measures.append(data)
-                                        #printMeasures(data)
-                                        # if len(MM1)>0:
-                                        #     print("Arrival time of the last element in the queue:",MM1[len(MM1)-1].arrival_time)
-#saveAllResults(measures)
-#plotTransientPhase()
-#plotFisherman()
-#width = confidenceIntervalWidth(all_runs_avg_delay)
-missedServicesResults()
+
+    #saveAllResults(measures)
+    #plotTransientPhase()
+    #plotFisherman()
+    #width = confidenceIntervalWidth(all_runs_avg_delay)
+    #missedServicesResults(all_runs_measures)
+    totalCostResults(all_runs_measures)
