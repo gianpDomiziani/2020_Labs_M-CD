@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import random
+import pandas as pd
 import uuid
 import numpy as np
 from queue import Queue, PriorityQueue
@@ -9,14 +10,14 @@ from queue import Queue, PriorityQueue
 # Constants
 # ******************************************************************************
 #BUFFER_SIZES = [1,2,3,4,9999999]
-BUFFER_SIZES = [9999999]
+BUFFER_SIZES = [300]
 N_SERVERS_POSSIBILITIES = [1]
 ASSIGN_STRATEGIES = ["random"]
 SERVER_COSTS = [1]  # is it mu?
 LOADS = np.arange(0.1, 3.1, 0.1)
-SIM_TIME = 50000
+SIM_TIME = 5000
 
-SERVICE = 1 # av service time
+SERVICE = 1  # av service time
 TYPE1 = 1
 
 
@@ -200,7 +201,8 @@ def printMeasures(data):
         print("Total assigned server # " + str(server_measure.server_index) + " " + str(server_measure.tot_assigned) + " % " + str(server_measure.tot_assigned_perc))
 
 def saveAllResults(measures):
-    f = open("result" + str(uuid.uuid4().hex) + ".csv","w")
+    Uuid = uuid.uuid4().hex
+    f = open("result" + str(Uuid) + ".csv","w")
     #f.write("time,
     # nServers,buffer,load,assign strategy,users,arrival rate,departure rate,avg users,avg delay,final_queue_size,loss prob,busy 1,busy 1 perc,busy 2, busy 2 perc, busy 3, busy 3 perc");
     #f.write("\n")
@@ -210,8 +212,17 @@ def saveAllResults(measures):
             f.write(";"+str(server_measure.busy_time)+";"+str(server_measure.busy_perc)+";"+str(server_measure.tot_assigned)+";"+str(server_measure.tot_assigned_perc))
         f.write("\n")
     f.close()
+    path = "result"+ str(Uuid)+ ".csv"
+    return path
 
+def createDF(file_path):
 
+    columns = ['time', 'n_servers', 'buffer_size', 'load', 'strategy', 'users', 'arrival_rate', 'departure_rate',
+               'avg_users', 'avg_delay', 'queue_size', 'loss_prob', 'Sbusy_time', 'Sbusy_perc', 'Stot_assigned', 'Stot_assiPerc']
+
+    df = pd.read_csv(file_path, sep=';', header=None)
+    df.columns = columns
+    return df
 # ******************************************************************************
 # the "main" of the simulation
 # ******************************************************************************
@@ -270,6 +281,7 @@ for N_SERVERS in N_SERVERS_POSSIBILITIES:
                 printMeasures(data)
                 # if len(MM1)>0:
                 #     print("Arrival time of the last element in the queue:",MM1[len(MM1)-1].arrival_time)
-saveAllResults(measures)
+path = saveAllResults(measures)
+df = createDF(path)
 
 
