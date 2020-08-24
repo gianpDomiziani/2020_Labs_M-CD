@@ -1,0 +1,4 @@
+missedServicesResults bth:  0.5  delay:  0.44150573243153246  loss prob:  12.01806197849838
+missedServicesResults bth:  0.75  delay:  0.8455216586497822  loss prob:  31.975029138607134
+missedServicesResults bth:  0.85  delay:  0.9349631863747265  loss prob:  38.49634431307356
+missedServicesResults bth:  1.0  delay:  1.0287139281078725  loss prob:  46.44666407557495
