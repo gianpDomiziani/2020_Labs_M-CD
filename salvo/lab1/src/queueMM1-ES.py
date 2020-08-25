@@ -10,7 +10,7 @@ from queue import Queue, PriorityQueue
 # Constants
 # ******************************************************************************
 #BUFFER_SIZES = [1,2,3,4,9999999]
-BUFFER_SIZES = [0, 1, 10, 300, 999999]
+BUFFER_SIZES = [0, 10, 300, 999999]
 N_SERVERS_POSSIBILITIES = [1]
 ASSIGN_STRATEGIES = ["random"]
 SERVER_COSTS = [1]  # is it mu?
