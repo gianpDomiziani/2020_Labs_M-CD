@@ -5,19 +5,20 @@ import pandas as pd
 import uuid
 import numpy as np
 from queue import Queue, PriorityQueue
+import matplotlib.pyplot as plt
 
 # ******************************************************************************
 # Constants
 # ******************************************************************************
-#BUFFER_SIZES = [1,2,3,4,9999999]
-BUFFER_SIZES = [300]
+BUFFER_SIZES = [500]  # inf ~ 10e+5
 N_SERVERS_POSSIBILITIES = [1]
 ASSIGN_STRATEGIES = ["random"]
-SERVER_COSTS = [1]  # is it mu?
+SERVER_COSTS = [1]
 LOADS = np.arange(0.1, 3.1, 0.1)
 SIM_TIME = 5000
 
-SERVICE = 1  # av service time
+SERVICES = [1, 2, 3]  # mu
+ARRIVALS = [0.2, 0.4, 0.6, 0.8, 1, 1.5, 2, 2.5, 3]
 TYPE1 = 1
 
 
@@ -86,7 +87,9 @@ class Server(object):
     def getTotalAssignedJobs(self):
         return len(self.jobs_history)
 
-
+# ******************************************************************************
+# Cluster
+# ******************************************************************************
 class Cluster():
     def __init__(self, n_servers):
         self.servers = []
@@ -126,7 +129,7 @@ def arrival(time, FES, queue, strategy):
     data.oldT = time
 
     # sample the time until the next event
-    inter_arrival = random.expovariate(lambd=1.0/ARRIVAL)
+    inter_arrival = random.expovariate(lambd=ARRIVAL)
 
     # schedule the next arrival
     FES.put((time + inter_arrival, "arrival"))
@@ -174,7 +177,7 @@ def scheduleDepartures(queue, time, FES, strategy):
     for i in range(min(cluster.freeServersNumber(), len(unassigned_users))):
         unassigned_users[-1 + i].is_assigned = True
         server = cluster.assignJob(strategy, time)
-        service_time = random.expovariate(1.0/SERVICE)
+        service_time = random.expovariate(SERVICE)
         #service_time = 1 + random.uniform(0, SEVICE_TIME)
         # schedule when the client will finish the server
         FES.put((time + service_time, "departure_"+str(server.index)))
@@ -222,66 +225,168 @@ def createDF(file_path):
 
     df = pd.read_csv(file_path, sep=';', header=None)
     df.columns = columns
+    df.to_csv(file_path)
     return df
+
+def plot(df, case='FiniteBufferSize', X='arrival_rate'):
+
+    x = df[X]
+    avg_delay = df['avg_delay']
+    avg_usr = df['avg_users']
+    l_p = df['loss_prob']
+    Sbusy_t = df['Sbusy_time']
+    step = len(ARRIVALS)
+
+    # =====================
+    # Plots ArrivalRate
+    # =====================
+    fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1, figsize=(10, 10))
+
+    fig.suptitle(f'{X} metrics analysis: {case}')
+    ax1.plot(x[0:step], avg_delay[0:step], linewidth=1, marker='.', label=f'AvgD: {SERVICES[0]}')
+    ax1.plot(x[step:2*step], avg_delay[step:2*step], linewidth=1, marker='^', label=f'AvgD: {SERVICES[1]}')
+    ax1.plot(x[2*step:-1], avg_delay[2*step:-1], linewidth=1, marker='*', label=f'AvgD: {SERVICES[2]}')
+    ax1.set_title(f'{X}: Average Delay')
+    ax1.set_ylabel('avg delay[s]')
+    if X == 'arrival_rate':
+        ax1.set_xlabel(f'{X} [1/s]')
+    else:
+        ax1.set_xlabel(f'{X}')
+
+    #ax1.set_ylim(3, 60)
+    ax1.legend(bbox_to_anchor=(0., 1.02, 1., .102))
+    # ncol=4, mode="expand", borderaxespad=0.)
+    ax1.grid(linestyle='--', linewidth=.4, which="both")
+
+    # Loss Probability
+    ax2.plot(x[0:step], l_p[0:step], linewidth=1, marker='.', label=f'LP:{SERVICES[0]}')
+    ax2.plot(x[step:2*step], l_p[step:2*step], linewidth=1, marker='^', label=f'LP:{SERVICES[1]}')
+    ax2.plot(x[2*step:-1], l_p[2*step:-1], linewidth=1, marker='*', label=f'LP:{SERVICES[2]}')
+    ax2.set_title('Loss Probability')
+    ax2.set_ylabel('Loss Probability')
+    if X == 'arrival_rate':
+        ax2.set_xlabel('Arrival Rate [1/s]')
+    else:
+        ax2.set_xlabel(f'{X}')
+    ax2.grid(linestyle='--', linewidth=.4, which="both")
+    ax2.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower left')
+    #ax2.set_ylim(3, 60)
+
+    #avg number of users
+    ax3.plot(x[0:step], avg_usr[0:step], linewidth=1, marker='.', label=f'AvgU:{SERVICES[0]}')
+    ax3.plot(x[step:2*step], avg_usr[step:2*step], linewidth=1, marker='^', label=f'AvgU:{SERVICES[1]}')
+    ax3.plot(x[2*step:-1], avg_usr[2*step:-1], linewidth=1, marker='o', label=f'AvgU:{SERVICES[2]}')
+    ax3.set_title('Average Users')
+    if X == 'arrival_rate':
+        ax2.set_xlabel('Arrival Rate [1/s]')
+    else:
+        ax2.set_xlabel(f'{X}')
+    ax3.set_ylabel('Avg users')
+    ax3.grid(linestyle='--', linewidth=.4, which="both")
+    ax3.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower left')
+
+    #SBusy_time
+    ax4.plot(x[0:step], Sbusy_t[0:step], linewidth=1, marker='8', label=f'SbusyT:{SERVICES[0]}')
+    ax4.plot(x[step:2 * step], Sbusy_t[step:2 * step], linewidth=1, marker='o', label=f'SbusyT:{SERVICES[1]}')
+    ax4.plot(x[2 * step:-1], Sbusy_t[2 * step:-1], linewidth=1, marker='v', label=f'SbusyT:{SERVICES[2]}')
+    ax4.set_title('Server Busy Time')
+    if X == 'arrival_rate':
+        ax2.set_xlabel('Arrival Rate [1/s]')
+    else:
+        ax2.set_xlabel(f'{X}')
+    ax4.set_ylabel('SBusyTime [s]')
+    ax4.grid(linestyle='--', linewidth=.4, which="both")
+    ax4.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower left')
+    # ax3.set_ylim(3, 60)
+    plt.subplots_adjust(bottom=0.3, right=0.8, top=0.9, hspace=1)
+    plt.savefig(fname=f"../plots/arrivalRate{case}_{X}.png")
+    plt.close()
+
+
+def state_distributionMM1(lambd, mu, N=10):
+    """
+    Compute the steady-state probability distribution for a M/M/1 queue: with assumption rho= LAMBDA/mu < 1.
+    :param lambd: Interarrival time
+    :param mu: Service Time
+    :param N: number of states
+    :return: steady-state probability distribution
+    """
+
+    rho = float(lambd/mu)
+    L = rho/(1-rho)
+    W = L/lambd
+    p0 = 1-rho
+    n = np.arange(N)
+    pn = np.reshape(p0*(rho**n), (N, 1))
+    return pn
+
+def average_time_in_queue(lambd, mu):
+
+    rho = lambd/mu
+    L = rho/(1-rho)
+    W = L/lambd
+
+    return W
 # ******************************************************************************
 # the "main" of the simulation
 # ******************************************************************************
 measures = []
 for N_SERVERS in N_SERVERS_POSSIBILITIES:
     for ASSIGN_STRATEGY in ASSIGN_STRATEGIES:
-        for LOAD in LOADS:
+        for SERVICE in SERVICES:
             for BUFFER_SIZE in BUFFER_SIZES:
-                ARRIVAL = SERVICE/LOAD # ?? rho = lambda/mu
-                arrivals = 0
-                users = 0
-                MM1 = []
-                cluster = Cluster(N_SERVERS)
+                for ARRIVAL in ARRIVALS:
+                    LOAD = ARRIVAL/SERVICE  # ?? rho = lambda/mu
+                    arrivals = 0
+                    users = 0
+                    MM1 = []
+                    cluster = Cluster(N_SERVERS)
 
-                random.seed(42)
+                    random.seed(42)
 
-                data = Measure(0,0,0,0,0)
+                    data = Measure(0,0,0,0,0)
 
-                # the simulation time
-                time = 0
+                    # the simulation time
+                    time = 0
 
-                # the list of events in the form: (time, type)
-                FES = PriorityQueue()
+                    # the list of events in the form: (time, type)
+                    FES = PriorityQueue()
 
-                # schedule the first arrival at t=0
-                FES.put((0, "arrival"))
+                    # schedule the first arrival at t=0
+                    FES.put((0, "arrival"))
 
-                # simulate until the simulated time reaches a constant
-                while time < SIM_TIME:
-                    (time, event_type) = FES.get()
+                    # simulate until the simulated time reaches a constant
+                    while time < SIM_TIME:
+                        (time, event_type) = FES.get()
 
-                    if event_type == "arrival":
-                        arrival(time, FES, MM1, ASSIGN_STRATEGY)
+                        if event_type == "arrival":
+                            arrival(time, FES, MM1, ASSIGN_STRATEGY)
 
-                    elif "departure" in event_type:
-                        departure(time, FES, MM1, int(event_type.split("_")[1]), ASSIGN_STRATEGY)
+                        elif "departure" in event_type:
+                            departure(time, FES, MM1, int(event_type.split("_")[1]), ASSIGN_STRATEGY)
 
-                data.n_servers = N_SERVERS
-                data.buffer_size = BUFFER_SIZE
-                data.load = LOAD
-                data.assign_strategy = ASSIGN_STRATEGY
-                data.users = users
-                data.arrival_rate = data.arr/time
-                data.departure_rate = data.dep/time
-                data.avg_users = data.ut/time
-                data.avg_delay = data.delay/data.dep
-                data.final_queue_size = len(MM1)
-                data.loss_prob = data.rejects * 100 / data.arr
-                data.time = time
+                    data.n_servers = N_SERVERS
+                    data.buffer_size = BUFFER_SIZE
+                    data.load = LOAD
+                    data.assign_strategy = ASSIGN_STRATEGY
+                    data.users = users
+                    data.arrival_rate = data.arr/time
+                    data.departure_rate = data.dep/time
+                    data.avg_users = data.ut/time
+                    data.avg_delay = data.delay/data.dep
+                    data.final_queue_size = len(MM1)
+                    data.loss_prob = data.rejects * 100 / data.arr
+                    data.time = time
 
-                for server in cluster.servers:
-                    server_measure = ServerMeasure(server.index, server.getTotalBusyTime(), server.getTotalBusyTime()*100/time, server.getTotalAssignedJobs(), server.getTotalAssignedJobs() * 100/data.dep)
-                    data.server_measures.append(server_measure)
+                    for server in cluster.servers:
+                        server_measure = ServerMeasure(server.index, server.getTotalBusyTime(), server.getTotalBusyTime()*100/time, server.getTotalAssignedJobs(), server.getTotalAssignedJobs() * 100/data.dep)
+                        data.server_measures.append(server_measure)
 
-                measures.append(data)
-                printMeasures(data)
-                # if len(MM1)>0:
-                #     print("Arrival time of the last element in the queue:",MM1[len(MM1)-1].arrival_time)
+                    measures.append(data)
+                    printMeasures(data)
+
 path = saveAllResults(measures)
 df = createDF(path)
+plot(df, X='load')
 
 
