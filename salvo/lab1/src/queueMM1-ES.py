@@ -209,38 +209,55 @@ def saveAllResults(measures):
     #f.write("time,
     # nServers,buffer,load,assign strategy,users,arrival rate,departure rate,avg users,avg delay,final_queue_size,loss prob,busy 1,busy 1 perc,busy 2, busy 2 perc, busy 3, busy 3 perc");
     #f.write("\n")
+    i = 1
     for data in measures:
         f.write(str(data.time)+';'+str(data.n_servers)+";"+str(data.buffer_size)+";"+str(data.load)+";"+data.assign_strategy+";"+str(data.users)+";"+str(data.arrival_rate)+";"+str(data.departure_rate)+";"+str(data.avg_users)+";"+str(data.avg_delay)+";"+str(data.final_queue_size)+";"+str(data.loss_prob))
         for server_measure in data.server_measures:
-            f.write(";"+str(server_measure.busy_time)+";"+str(server_measure.busy_perc)+";"+str(server_measure.tot_assigned)+";"+str(server_measure.tot_assigned_perc))
+            f.write(";"+str(server_measure.busy_time)+str(i)+";"+str(server_measure.busy_perc)+str(i)+";"+str(server_measure.tot_assigned)+str(i)+";"+str(server_measure.tot_assigned_perc))
+            i += 1
         f.write("\n")
     f.close()
     path = "result"+ str(Uuid)+ ".csv"
     return path
 
-def createDF(file_path):
+def createDF(file_path, nServers=1):
 
-    columns = ['time', 'n_servers', 'buffer_size', 'load', 'strategy', 'users', 'arrival_rate', 'departure_rate',
+    if nServers == 1:
+        columns = ['time', 'n_servers', 'buffer_size', 'load', 'strategy', 'users', 'arrival_rate', 'departure_rate',
                'avg_users', 'avg_delay', 'queue_size', 'loss_prob', 'Sbusy_time', 'Sbusy_perc', 'Stot_assigned', 'Stot_assiPerc']
+    else:
+        columns = ['time', 'n_servers', 'buffer_size', 'load', 'strategy', 'users', 'arrival_rate', 'departure_rate',
+                   'avg_users', 'avg_delay', 'queue_size', 'loss_prob', 'Sbusy_time1', 'Sbusy_perc1', 'Stot_assigned1',
+                   'Stot_assiPerc1', 'Sbusy_time2', 'Sbusy_perc2', 'Stot_assigned2',
+                   'Stot_assiPerc2']
+
 
     df = pd.read_csv(file_path, sep=';', header=None)
     df.columns = columns
     df.to_csv(file_path)
     return df
 
-def plot(df, case='FiniteBufferSize', X='arrival_rate'):
+def plot(df, case='FiniteBufferSize', X='arrival_rate', multi=False):
 
     x = df[X]
     avg_delay = df['avg_delay']
     avg_usr = df['avg_users']
     l_p = df['loss_prob']
-    Sbusy_t = df['Sbusy_time']
+    if multi:
+        Sbusy_t1 = df['Sbusy_time1']
+        Sbusy_t2 = df['Sbusy_time2']
+    else:
+        Sbusy_t = df['Sbusy_time']
     step = len(ARRIVALS)
 
     # =====================
     # Plots ArrivalRate
     # =====================
-    fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1, figsize=(10, 10))
+    figw, figh = 16.0, 8.0
+    if not multi:
+        fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1, figsize=(figw, figh))
+    else:
+        fig, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(5, 1, figsize=(figw, figh))
 
     fig.suptitle(f'{X} metrics analysis: {case}')
     ax1.plot(x[0:step], avg_delay[0:step], linewidth=1, marker='.', label=f'AvgD: {SERVICES[0]}')
@@ -269,7 +286,7 @@ def plot(df, case='FiniteBufferSize', X='arrival_rate'):
     else:
         ax2.set_xlabel(f'{X}')
     ax2.grid(linestyle='--', linewidth=.4, which="both")
-    ax2.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower left')
+    ax2.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower right')
     #ax2.set_ylim(3, 60)
 
     #avg number of users
@@ -283,24 +300,54 @@ def plot(df, case='FiniteBufferSize', X='arrival_rate'):
         ax2.set_xlabel(f'{X}')
     ax3.set_ylabel('Avg users')
     ax3.grid(linestyle='--', linewidth=.4, which="both")
-    ax3.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower left')
+    ax3.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower right')
 
     #SBusy_time
-    ax4.plot(x[0:step], Sbusy_t[0:step], linewidth=1, marker='8', label=f'SbusyT:{SERVICES[0]}')
-    ax4.plot(x[step:2 * step], Sbusy_t[step:2 * step], linewidth=1, marker='o', label=f'SbusyT:{SERVICES[1]}')
-    ax4.plot(x[2 * step:-1], Sbusy_t[2 * step:-1], linewidth=1, marker='v', label=f'SbusyT:{SERVICES[2]}')
-    ax4.set_title('Server Busy Time')
-    if X == 'arrival_rate':
-        ax2.set_xlabel('Arrival Rate [1/s]')
-    else:
-        ax2.set_xlabel(f'{X}')
-    ax4.set_ylabel('SBusyTime [s]')
-    ax4.grid(linestyle='--', linewidth=.4, which="both")
-    ax4.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower left')
+    if not multi:
+        ax4.plot(x[0:step], Sbusy_t[0:step], linewidth=1, marker='8', label=f'SbusyT:{SERVICES[0]}')
+        ax4.plot(x[step:2 * step], Sbusy_t[step:2 * step], linewidth=1, marker='o', label=f'SbusyT:{SERVICES[1]}')
+        ax4.plot(x[2 * step:-1], Sbusy_t[2 * step:-1], linewidth=1, marker='v', label=f'SbusyT:{SERVICES[2]}')
+        ax4.set_title('Server Busy Time')
+        if X == 'arrival_rate':
+            ax4.set_xlabel('Arrival Rate [1/s]')
+        else:
+            ax4.set_xlabel(f'{X}')
+        ax4.set_ylabel('SBusyTime [s]')
+        ax4.grid(linestyle='--', linewidth=.4, which="both")
+        ax4.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower right')
     # ax3.set_ylim(3, 60)
-    plt.subplots_adjust(bottom=0.3, right=0.8, top=0.9, hspace=1)
-    plt.savefig(fname=f"../plots/arrivalRate{case}_{X}.png")
-    plt.close()
+        plt.subplots_adjust(left=1/figw, right=1-1/figw, bottom=1/figh, top=1-1/figh)
+        plt.savefig(fname=f"../plots/arrivalRate{case}_{X}.png")
+        plt.close()
+    else:
+        ax4.plot(x[0:step], Sbusy_t1[0:step], linewidth=1, marker='8', label=f'SbusyT1:{SERVICES[0]}')
+        ax4.plot(x[step:2 * step], Sbusy_t1[step:2 * step], linewidth=1, marker='o', label=f'SbusyT1:{SERVICES[1]}')
+        ax4.plot(x[2 * step:-1], Sbusy_t1[2 * step:-1], linewidth=1, marker='v', label=f'SbusyT1:{SERVICES[2]}')
+        ax4.set_title('Server Busy Time')
+        if X == 'arrival_rate':
+            ax5.set_xlabel('Arrival Rate [1/s]')
+        else:
+            ax5.set_xlabel(f'{X}')
+        ax4.set_ylabel('SBusyTime [s]')
+        ax4.grid(linestyle='--', linewidth=.4, which="both")
+        ax4.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower right')
+
+        ax5.plot(x[0:step], Sbusy_t2[0:step], linewidth=1, marker='8', label=f'SbusyT2:{SERVICES[0]}')
+        ax5.plot(x[step:2 * step], Sbusy_t2[step:2 * step], linewidth=1, marker='o', label=f'SbusyT2:{SERVICES[1]}')
+        ax5.plot(x[2 * step:-1], Sbusy_t2[2 * step:-1], linewidth=1, marker='v', label=f'SbusyT2:{SERVICES[2]}')
+        ax5.set_title('Server Busy Time')
+        if X == 'arrival_rate':
+            ax5.set_xlabel('Arrival Rate [1/s]')
+        else:
+            ax5.set_xlabel(f'{X}')
+        ax5.set_ylabel('SBusyTime [s]')
+        ax5.grid(linestyle='--', linewidth=.4, which="both")
+        ax5.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower right')
+        # ax3.set_ylim(3, 60)
+        plt.subplots_adjust(left=1 / figw, right=1 - 1 / figw, bottom=1 / figh, top=1 - 1 / figh)
+        plt.savefig(fname=f"../plots/arrivalRate{case}_{X}.png")
+        plt.close()
+
 
 
 def state_distributionMM1(lambd, mu, N=10):
@@ -387,6 +434,6 @@ for N_SERVERS in N_SERVERS_POSSIBILITIES:
 
 path = saveAllResults(measures)
 df = createDF(path)
-plot(df, X='load')
+plot(df)
 
 
