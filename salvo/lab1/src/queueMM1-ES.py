@@ -10,13 +10,17 @@ import matplotlib.pyplot as plt
 # ******************************************************************************
 # Constants
 # ******************************************************************************
-BUFFER_SIZES = [500]  # inf ~ 10e+5
-N_SERVERS_POSSIBILITIES = [1]
-ASSIGN_STRATEGIES = ["random"]
-SERVER_COSTS = [1]
-LOADS = np.arange(0.1, 3.1, 0.1)
-SIM_TIME = 5000
+# Scenarios: 
+# Buffer sizes = 1, 500, 100000
+# Server Possibilities 1 e 2
+# assign strategies: random - less_cost
 
+BUFFER_SIZES = [500]  # inf ~ 10e+5
+N_SERVERS_POSSIBILITIES = [2]
+ASSIGN_STRATEGIES = ["random"]
+SERVER_COSTS = [1, 2]
+LOADS = np.arange(0.1, 3.1, 0.1)
+SIM_TIME = 10000
 SERVICES = [1, 2, 3]  # mu
 ARRIVALS = [0.2, 0.4, 0.6, 0.8, 1, 1.5, 2, 2.5, 3]
 TYPE1 = 1
@@ -220,7 +224,7 @@ def saveAllResults(measures):
     path = "result"+ str(Uuid)+ ".csv"
     return path
 
-def createDF(file_path, nServers=1):
+def createDF(file_path, nServers=2):
 
     if nServers == 1:
         columns = ['time', 'n_servers', 'buffer_size', 'load', 'strategy', 'users', 'arrival_rate', 'departure_rate',
@@ -237,7 +241,7 @@ def createDF(file_path, nServers=1):
     df.to_csv(file_path)
     return df
 
-def plot(df, case='FiniteBufferSize', X='arrival_rate', multi=False):
+def plot(df, case='FiniteBufferSize500_MultiServers', X='load', multi=True):
 
     x = df[X]
     avg_delay = df['avg_delay']
@@ -263,7 +267,7 @@ def plot(df, case='FiniteBufferSize', X='arrival_rate', multi=False):
     ax1.plot(x[0:step], avg_delay[0:step], linewidth=1, marker='.', label=f'AvgD: {SERVICES[0]}')
     ax1.plot(x[step:2*step], avg_delay[step:2*step], linewidth=1, marker='^', label=f'AvgD: {SERVICES[1]}')
     ax1.plot(x[2*step:-1], avg_delay[2*step:-1], linewidth=1, marker='*', label=f'AvgD: {SERVICES[2]}')
-    ax1.set_title(f'{X}: Average Delay')
+    #ax1.set_title(f'{X}: Average Delay')
     ax1.set_ylabel('avg delay[s]')
     if X == 'arrival_rate':
         ax1.set_xlabel(f'{X} [1/s]')
@@ -271,7 +275,7 @@ def plot(df, case='FiniteBufferSize', X='arrival_rate', multi=False):
         ax1.set_xlabel(f'{X}')
 
     #ax1.set_ylim(3, 60)
-    ax1.legend(bbox_to_anchor=(0., 1.02, 1., .102))
+    ax1.legend(bbox_to_anchor=(0., 0.1, 1., .102), loc='center right')
     # ncol=4, mode="expand", borderaxespad=0.)
     ax1.grid(linestyle='--', linewidth=.4, which="both")
 
@@ -279,42 +283,42 @@ def plot(df, case='FiniteBufferSize', X='arrival_rate', multi=False):
     ax2.plot(x[0:step], l_p[0:step], linewidth=1, marker='.', label=f'LP:{SERVICES[0]}')
     ax2.plot(x[step:2*step], l_p[step:2*step], linewidth=1, marker='^', label=f'LP:{SERVICES[1]}')
     ax2.plot(x[2*step:-1], l_p[2*step:-1], linewidth=1, marker='*', label=f'LP:{SERVICES[2]}')
-    ax2.set_title('Loss Probability')
+    #ax2.set_title('Loss Probability')
     ax2.set_ylabel('Loss Probability')
     if X == 'arrival_rate':
         ax2.set_xlabel('Arrival Rate [1/s]')
     else:
         ax2.set_xlabel(f'{X}')
     ax2.grid(linestyle='--', linewidth=.4, which="both")
-    ax2.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower right')
+    ax2.legend(bbox_to_anchor=(0, 0.1, 1., 0.1), loc='center right')
     #ax2.set_ylim(3, 60)
 
     #avg number of users
     ax3.plot(x[0:step], avg_usr[0:step], linewidth=1, marker='.', label=f'AvgU:{SERVICES[0]}')
     ax3.plot(x[step:2*step], avg_usr[step:2*step], linewidth=1, marker='^', label=f'AvgU:{SERVICES[1]}')
     ax3.plot(x[2*step:-1], avg_usr[2*step:-1], linewidth=1, marker='o', label=f'AvgU:{SERVICES[2]}')
-    ax3.set_title('Average Users')
+    #ax3.set_title('Average Users')
     if X == 'arrival_rate':
         ax2.set_xlabel('Arrival Rate [1/s]')
     else:
         ax2.set_xlabel(f'{X}')
     ax3.set_ylabel('Avg users')
     ax3.grid(linestyle='--', linewidth=.4, which="both")
-    ax3.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower right')
+    ax3.legend(bbox_to_anchor=(0., 0.1, 1., .102), loc='center right')
 
     #SBusy_time
     if not multi:
         ax4.plot(x[0:step], Sbusy_t[0:step], linewidth=1, marker='8', label=f'SbusyT:{SERVICES[0]}')
         ax4.plot(x[step:2 * step], Sbusy_t[step:2 * step], linewidth=1, marker='o', label=f'SbusyT:{SERVICES[1]}')
         ax4.plot(x[2 * step:-1], Sbusy_t[2 * step:-1], linewidth=1, marker='v', label=f'SbusyT:{SERVICES[2]}')
-        ax4.set_title('Server Busy Time')
+        #ax4.set_title('Server Busy Time')
         if X == 'arrival_rate':
             ax4.set_xlabel('Arrival Rate [1/s]')
         else:
             ax4.set_xlabel(f'{X}')
         ax4.set_ylabel('SBusyTime [s]')
         ax4.grid(linestyle='--', linewidth=.4, which="both")
-        ax4.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower right')
+        ax4.legend(bbox_to_anchor=(0., 0.1, 1., .102), loc='center right')
     # ax3.set_ylim(3, 60)
         plt.subplots_adjust(left=1/figw, right=1-1/figw, bottom=1/figh, top=1-1/figh)
         plt.savefig(fname=f"../plots/arrivalRate{case}_{X}.png")
@@ -323,26 +327,26 @@ def plot(df, case='FiniteBufferSize', X='arrival_rate', multi=False):
         ax4.plot(x[0:step], Sbusy_t1[0:step], linewidth=1, marker='8', label=f'SbusyT1:{SERVICES[0]}')
         ax4.plot(x[step:2 * step], Sbusy_t1[step:2 * step], linewidth=1, marker='o', label=f'SbusyT1:{SERVICES[1]}')
         ax4.plot(x[2 * step:-1], Sbusy_t1[2 * step:-1], linewidth=1, marker='v', label=f'SbusyT1:{SERVICES[2]}')
-        ax4.set_title('Server Busy Time')
+        #ax4.set_title('Server Busy Time')
         if X == 'arrival_rate':
             ax5.set_xlabel('Arrival Rate [1/s]')
         else:
             ax5.set_xlabel(f'{X}')
         ax4.set_ylabel('SBusyTime [s]')
         ax4.grid(linestyle='--', linewidth=.4, which="both")
-        ax4.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower right')
+        ax4.legend(bbox_to_anchor=(0., 0.1, 1., .102), loc='center right')
 
         ax5.plot(x[0:step], Sbusy_t2[0:step], linewidth=1, marker='8', label=f'SbusyT2:{SERVICES[0]}')
         ax5.plot(x[step:2 * step], Sbusy_t2[step:2 * step], linewidth=1, marker='o', label=f'SbusyT2:{SERVICES[1]}')
         ax5.plot(x[2 * step:-1], Sbusy_t2[2 * step:-1], linewidth=1, marker='v', label=f'SbusyT2:{SERVICES[2]}')
-        ax5.set_title('Server Busy Time')
+        #ax5.set_title('Server Busy Time')
         if X == 'arrival_rate':
             ax5.set_xlabel('Arrival Rate [1/s]')
         else:
             ax5.set_xlabel(f'{X}')
         ax5.set_ylabel('SBusyTime [s]')
         ax5.grid(linestyle='--', linewidth=.4, which="both")
-        ax5.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower right')
+        ax5.legend(bbox_to_anchor=(0., 0.1 , 1., .102), loc='center right')
         # ax3.set_ylim(3, 60)
         plt.subplots_adjust(left=1 / figw, right=1 - 1 / figw, bottom=1 / figh, top=1 - 1 / figh)
         plt.savefig(fname=f"../plots/arrivalRate{case}_{X}.png")
