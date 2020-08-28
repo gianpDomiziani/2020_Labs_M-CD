@@ -211,9 +211,6 @@ def printMeasures(data):
 def saveAllResults(measures):
     Uuid = uuid.uuid4().hex
     f = open("result" + str(Uuid) + ".csv","w")
-    #f.write("time,
-    # nServers,buffer,load,assign strategy,users,arrival rate,departure rate,avg users,avg delay,final_queue_size,loss prob,busy 1,busy 1 perc,busy 2, busy 2 perc, busy 3, busy 3 perc");
-    #f.write("\n")
     i = 1
     for data in measures:
         f.write(str(data.time)+';'+str(data.n_servers)+";"+str(data.buffer_size)+";"+str(data.load)+";"+data.assign_strategy+";"+str(data.users)+";"+str(data.arrival_rate)+";"+str(data.departure_rate)+";"+str(data.avg_users)+";"+str(data.avg_delay)+";"+str(data.final_queue_size)+";"+str(data.loss_prob))
@@ -438,7 +435,7 @@ for N_SERVERS in N_SERVERS_POSSIBILITIES:
                     printMeasures(data)
 
 path = saveAllResults(measures)
-df = createDF(path)
-plot(df, case='FiniteBufferSizeMG1', X='load')
+df = createDF(path, nServers=2)
+plot(df, case='FiniteBufferSizeMG1MS', X='arrival_rate', multi=True)
 
 
