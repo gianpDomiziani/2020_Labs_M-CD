@@ -15,9 +15,9 @@ import matplotlib.pyplot as plt
 # Server Possibilities 1 e 2
 # assign strategies: random - less_cost
 
-BUFFER_SIZES = [100000]  # inf ~ 10e+5
+BUFFER_SIZES = [0]  # inf ~ 10e+5
 N_SERVERS_POSSIBILITIES = [2]
-ASSIGN_STRATEGIES = ["random"]
+ASSIGN_STRATEGIES = ["less_cost"]
 SERVER_COSTS = [1, 2]
 LOADS = np.arange(0.1, 3.1, 0.1)
 SIM_TIME = 5000
@@ -108,9 +108,9 @@ class Cluster():
         if strategy == "random":
             server = random.choice([server for server in self.servers if not server.is_busy])
         if strategy == "less_cost":
-            server = self.servers[0]
+            server = [server for server in self.servers if not server.is_busy][0]
             for candidate in self.servers:
-                if candidate.cost < server.cost:
+                if candidate.cost < server.cost and not candidate.is_busy:
                     server = candidate
         server.startJob(time)
         return server
@@ -181,8 +181,8 @@ def scheduleDepartures(queue, time, FES, strategy):
     for i in range(min(cluster.freeServersNumber(), len(unassigned_users))):
         unassigned_users[-1 + i].is_assigned = True
         server = cluster.assignJob(strategy, time)
-        #service_time = random.expovariate(SERVICE)
-        service_time = random.paretovariate(SERVICE)  #MG1
+        service_time = random.expovariate(SERVICE)
+        #service_time = random.paretovariate(SERVICE)  #MG1
         #service_time = 1 + random.uniform(0, SEVICE_TIME)
         # schedule when the client will finish the server
         FES.put((time + service_time, "departure_"+str(server.index)))
@@ -436,7 +436,7 @@ for N_SERVERS in N_SERVERS_POSSIBILITIES:
 
 path = saveAllResults(measures)
 df = createDF(path, nServers=2)
-plot(df, case='INFiniteBufferSizeMG1MS', X='arrival_rate', multi=True)
+plot(df, case='INFiniteBufferSize_LC_MS', X='arrival_rate', multi=True)
 
 #THINGS TO DO TO RUN A SIMULATION 
 '''
