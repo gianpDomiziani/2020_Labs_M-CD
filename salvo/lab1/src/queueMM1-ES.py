@@ -15,10 +15,10 @@ import matplotlib.pyplot as plt
 # Server Possibilities 1 e 2
 # assign strategies: random - less_cost
 
-BUFFER_SIZES = [100000]  # inf ~ 10e+5
-N_SERVERS_POSSIBILITIES = [2]
+BUFFER_SIZES = [500]  # inf ~ 10e+5
+N_SERVERS_POSSIBILITIES = [1]
 ASSIGN_STRATEGIES = ["random"]
-SERVER_COSTS = [1, 2]
+SERVER_COSTS = [1]
 LOADS = np.arange(0.1, 3.1, 0.1)
 SIM_TIME = 5000
 SERVICES = [1, 2, 3]  # mu
@@ -444,9 +444,8 @@ Set Number of servers 1 or 2 and also nServers in createDF
 Set Buffer Size: 1 (no more), 500, 100000
 If N° Server 2 --> set server_Costs[1, 2]
 Remember to select the distribution: 
-        #service_time = random.expovariate(SERVICE)   #MM1 ? 
+        #service_time = random.expovariate(SERVICE)   #MM1  
         service_time = random.paretovariate(SERVICE)  #MG1
-        #service_time = 1 + random.uniform(0, SEVICE_TIME)  # e questa?
 in plot specify the case, the X and the multi bolean variable
 
 #open in Terminal the "src" folder 
