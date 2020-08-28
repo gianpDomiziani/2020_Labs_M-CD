@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 # Server Possibilities 1 e 2
 # assign strategies: random - less_cost
 
-BUFFER_SIZES = [500]  # inf ~ 10e+5
+BUFFER_SIZES = [100000]  # inf ~ 10e+5
 N_SERVERS_POSSIBILITIES = [2]
 ASSIGN_STRATEGIES = ["random"]
 SERVER_COSTS = [1, 2]
@@ -182,7 +182,7 @@ def scheduleDepartures(queue, time, FES, strategy):
         unassigned_users[-1 + i].is_assigned = True
         server = cluster.assignJob(strategy, time)
         #service_time = random.expovariate(SERVICE)
-        service_time = random.paretovariate(SERVICE)
+        service_time = random.paretovariate(SERVICE)  #MG1
         #service_time = 1 + random.uniform(0, SEVICE_TIME)
         # schedule when the client will finish the server
         FES.put((time + service_time, "departure_"+str(server.index)))
@@ -222,7 +222,7 @@ def saveAllResults(measures):
     path = "result"+ str(Uuid)+ ".csv"
     return path
 
-def createDF(file_path, nServers=2):
+def createDF(file_path, nServers=1):
 
     if nServers == 1:
         columns = ['time', 'n_servers', 'buffer_size', 'load', 'strategy', 'users', 'arrival_rate', 'departure_rate',
@@ -239,7 +239,7 @@ def createDF(file_path, nServers=2):
     df.to_csv(file_path)
     return df
 
-def plot(df, case='FiniteBufferSize500_MultiServers', X='load', multi=True):
+def plot(df, case='MG1FiniteBufferSize', X='load', multi=False):
 
     x = df[X]
     avg_delay = df['avg_delay']
@@ -436,6 +436,21 @@ for N_SERVERS in N_SERVERS_POSSIBILITIES:
 
 path = saveAllResults(measures)
 df = createDF(path, nServers=2)
-plot(df, case='FiniteBufferSizeMG1MS', X='arrival_rate', multi=True)
+plot(df, case='INFiniteBufferSizeMG1MS', X='arrival_rate', multi=True)
+
+#THINGS TO DO TO RUN A SIMULATION 
+'''
+Set Number of servers 1 or 2 and also nServers in createDF
+Set Buffer Size: 1 (no more), 500, 100000
+If N° Server 2 --> set server_Costs[1, 2]
+Remember to select the distribution: 
+        #service_time = random.expovariate(SERVICE)   #MM1 ? 
+        service_time = random.paretovariate(SERVICE)  #MG1
+        #service_time = 1 + random.uniform(0, SEVICE_TIME)  # e questa?
+in plot specify the case, the X and the multi bolean variable
+
+#open in Terminal the "src" folder 
+# python3 queueMM1-ES.py 
+'''
 
 
