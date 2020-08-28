@@ -177,7 +177,8 @@ def scheduleDepartures(queue, time, FES, strategy):
     for i in range(min(cluster.freeServersNumber(), len(unassigned_users))):
         unassigned_users[-1 + i].is_assigned = True
         server = cluster.assignJob(strategy, time)
-        service_time = random.expovariate(SERVICE)
+        #service_time = random.expovariate(SERVICE)
+        service_time = random.paretovariate(SERVICE)
         #service_time = 1 + random.uniform(0, SEVICE_TIME)
         # schedule when the client will finish the server
         FES.put((time + service_time, "departure_"+str(server.index)))
@@ -263,7 +264,7 @@ def plot(df, case='FiniteBufferSize', X='arrival_rate', multi=False):
     ax1.plot(x[0:step], avg_delay[0:step], linewidth=1, marker='.', label=f'AvgD: {SERVICES[0]}')
     ax1.plot(x[step:2*step], avg_delay[step:2*step], linewidth=1, marker='^', label=f'AvgD: {SERVICES[1]}')
     ax1.plot(x[2*step:-1], avg_delay[2*step:-1], linewidth=1, marker='*', label=f'AvgD: {SERVICES[2]}')
-    ax1.set_title(f'{X}: Average Delay')
+    #ax1.set_title(f'{X}: Average Delay')
     ax1.set_ylabel('avg delay[s]')
     if X == 'arrival_rate':
         ax1.set_xlabel(f'{X} [1/s]')
@@ -279,7 +280,7 @@ def plot(df, case='FiniteBufferSize', X='arrival_rate', multi=False):
     ax2.plot(x[0:step], l_p[0:step], linewidth=1, marker='.', label=f'LP:{SERVICES[0]}')
     ax2.plot(x[step:2*step], l_p[step:2*step], linewidth=1, marker='^', label=f'LP:{SERVICES[1]}')
     ax2.plot(x[2*step:-1], l_p[2*step:-1], linewidth=1, marker='*', label=f'LP:{SERVICES[2]}')
-    ax2.set_title('Loss Probability')
+    #ax2.set_title('Loss Probability')
     ax2.set_ylabel('Loss Probability')
     if X == 'arrival_rate':
         ax2.set_xlabel('Arrival Rate [1/s]')
@@ -293,7 +294,7 @@ def plot(df, case='FiniteBufferSize', X='arrival_rate', multi=False):
     ax3.plot(x[0:step], avg_usr[0:step], linewidth=1, marker='.', label=f'AvgU:{SERVICES[0]}')
     ax3.plot(x[step:2*step], avg_usr[step:2*step], linewidth=1, marker='^', label=f'AvgU:{SERVICES[1]}')
     ax3.plot(x[2*step:-1], avg_usr[2*step:-1], linewidth=1, marker='o', label=f'AvgU:{SERVICES[2]}')
-    ax3.set_title('Average Users')
+    #ax3.set_title('Average Users')
     if X == 'arrival_rate':
         ax2.set_xlabel('Arrival Rate [1/s]')
     else:
@@ -307,7 +308,7 @@ def plot(df, case='FiniteBufferSize', X='arrival_rate', multi=False):
         ax4.plot(x[0:step], Sbusy_t[0:step], linewidth=1, marker='8', label=f'SbusyT:{SERVICES[0]}')
         ax4.plot(x[step:2 * step], Sbusy_t[step:2 * step], linewidth=1, marker='o', label=f'SbusyT:{SERVICES[1]}')
         ax4.plot(x[2 * step:-1], Sbusy_t[2 * step:-1], linewidth=1, marker='v', label=f'SbusyT:{SERVICES[2]}')
-        ax4.set_title('Server Busy Time')
+        #ax4.set_title('Server Busy Time')
         if X == 'arrival_rate':
             ax4.set_xlabel('Arrival Rate [1/s]')
         else:
@@ -323,7 +324,7 @@ def plot(df, case='FiniteBufferSize', X='arrival_rate', multi=False):
         ax4.plot(x[0:step], Sbusy_t1[0:step], linewidth=1, marker='8', label=f'SbusyT1:{SERVICES[0]}')
         ax4.plot(x[step:2 * step], Sbusy_t1[step:2 * step], linewidth=1, marker='o', label=f'SbusyT1:{SERVICES[1]}')
         ax4.plot(x[2 * step:-1], Sbusy_t1[2 * step:-1], linewidth=1, marker='v', label=f'SbusyT1:{SERVICES[2]}')
-        ax4.set_title('Server Busy Time')
+        #ax4.set_title('Server Busy Time')
         if X == 'arrival_rate':
             ax5.set_xlabel('Arrival Rate [1/s]')
         else:
@@ -335,7 +336,7 @@ def plot(df, case='FiniteBufferSize', X='arrival_rate', multi=False):
         ax5.plot(x[0:step], Sbusy_t2[0:step], linewidth=1, marker='8', label=f'SbusyT2:{SERVICES[0]}')
         ax5.plot(x[step:2 * step], Sbusy_t2[step:2 * step], linewidth=1, marker='o', label=f'SbusyT2:{SERVICES[1]}')
         ax5.plot(x[2 * step:-1], Sbusy_t2[2 * step:-1], linewidth=1, marker='v', label=f'SbusyT2:{SERVICES[2]}')
-        ax5.set_title('Server Busy Time')
+        #ax5.set_title('Server Busy Time')
         if X == 'arrival_rate':
             ax5.set_xlabel('Arrival Rate [1/s]')
         else:
@@ -434,6 +435,6 @@ for N_SERVERS in N_SERVERS_POSSIBILITIES:
 
 path = saveAllResults(measures)
 df = createDF(path)
-plot(df)
+plot(df, case='FiniteBufferSizeMG1', X='load')
 
 
