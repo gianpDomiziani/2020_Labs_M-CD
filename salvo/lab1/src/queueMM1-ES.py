@@ -10,13 +10,17 @@ import matplotlib.pyplot as plt
 # ******************************************************************************
 # Constants
 # ******************************************************************************
+# Scenarios: 
+# Buffer sizes = 1, 500, 100000
+# Server Possibilities 1 e 2
+# assign strategies: random - less_cost
+
 BUFFER_SIZES = [500]  # inf ~ 10e+5
-N_SERVERS_POSSIBILITIES = [1]
+N_SERVERS_POSSIBILITIES = [2]
 ASSIGN_STRATEGIES = ["random"]
-SERVER_COSTS = [1]
+SERVER_COSTS = [1, 2]
 LOADS = np.arange(0.1, 3.1, 0.1)
 SIM_TIME = 5000
-
 SERVICES = [1, 2, 3]  # mu
 ARRIVALS = [0.2, 0.4, 0.6, 0.8, 1, 1.5, 2, 2.5, 3]
 TYPE1 = 1
@@ -221,7 +225,7 @@ def saveAllResults(measures):
     path = "result"+ str(Uuid)+ ".csv"
     return path
 
-def createDF(file_path, nServers=1):
+def createDF(file_path, nServers=2):
 
     if nServers == 1:
         columns = ['time', 'n_servers', 'buffer_size', 'load', 'strategy', 'users', 'arrival_rate', 'departure_rate',
@@ -238,7 +242,7 @@ def createDF(file_path, nServers=1):
     df.to_csv(file_path)
     return df
 
-def plot(df, case='FiniteBufferSize', X='arrival_rate', multi=False):
+def plot(df, case='FiniteBufferSize500_MultiServers', X='load', multi=True):
 
     x = df[X]
     avg_delay = df['avg_delay']
@@ -272,7 +276,7 @@ def plot(df, case='FiniteBufferSize', X='arrival_rate', multi=False):
         ax1.set_xlabel(f'{X}')
 
     #ax1.set_ylim(3, 60)
-    ax1.legend(bbox_to_anchor=(0., 1.02, 1., .102))
+    ax1.legend(bbox_to_anchor=(0., 0.1, 1., .102), loc='center right')
     # ncol=4, mode="expand", borderaxespad=0.)
     ax1.grid(linestyle='--', linewidth=.4, which="both")
 
@@ -287,7 +291,7 @@ def plot(df, case='FiniteBufferSize', X='arrival_rate', multi=False):
     else:
         ax2.set_xlabel(f'{X}')
     ax2.grid(linestyle='--', linewidth=.4, which="both")
-    ax2.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower right')
+    ax2.legend(bbox_to_anchor=(0, 0.1, 1., 0.1), loc='center right')
     #ax2.set_ylim(3, 60)
 
     #avg number of users
@@ -301,7 +305,7 @@ def plot(df, case='FiniteBufferSize', X='arrival_rate', multi=False):
         ax2.set_xlabel(f'{X}')
     ax3.set_ylabel('Avg users')
     ax3.grid(linestyle='--', linewidth=.4, which="both")
-    ax3.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower right')
+    ax3.legend(bbox_to_anchor=(0., 0.1, 1., .102), loc='center right')
 
     #SBusy_time
     if not multi:
@@ -315,7 +319,7 @@ def plot(df, case='FiniteBufferSize', X='arrival_rate', multi=False):
             ax4.set_xlabel(f'{X}')
         ax4.set_ylabel('SBusyTime [s]')
         ax4.grid(linestyle='--', linewidth=.4, which="both")
-        ax4.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower right')
+        ax4.legend(bbox_to_anchor=(0., 0.1, 1., .102), loc='center right')
     # ax3.set_ylim(3, 60)
         plt.subplots_adjust(left=1/figw, right=1-1/figw, bottom=1/figh, top=1-1/figh)
         plt.savefig(fname=f"../plots/arrivalRate{case}_{X}.png")
@@ -331,7 +335,7 @@ def plot(df, case='FiniteBufferSize', X='arrival_rate', multi=False):
             ax5.set_xlabel(f'{X}')
         ax4.set_ylabel('SBusyTime [s]')
         ax4.grid(linestyle='--', linewidth=.4, which="both")
-        ax4.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower right')
+        ax4.legend(bbox_to_anchor=(0., 0.1, 1., .102), loc='center right')
 
         ax5.plot(x[0:step], Sbusy_t2[0:step], linewidth=1, marker='8', label=f'SbusyT2:{SERVICES[0]}')
         ax5.plot(x[step:2 * step], Sbusy_t2[step:2 * step], linewidth=1, marker='o', label=f'SbusyT2:{SERVICES[1]}')
@@ -343,7 +347,7 @@ def plot(df, case='FiniteBufferSize', X='arrival_rate', multi=False):
             ax5.set_xlabel(f'{X}')
         ax5.set_ylabel('SBusyTime [s]')
         ax5.grid(linestyle='--', linewidth=.4, which="both")
-        ax5.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower right')
+        ax5.legend(bbox_to_anchor=(0., 0.1 , 1., .102), loc='center right')
         # ax3.set_ylim(3, 60)
         plt.subplots_adjust(left=1 / figw, right=1 - 1 / figw, bottom=1 / figh, top=1 - 1 / figh)
         plt.savefig(fname=f"../plots/arrivalRate{case}_{X}.png")
