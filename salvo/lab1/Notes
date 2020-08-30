@@ -1,0 +1,117 @@
+Some Relevant comments!
+
+-------- SIMULATION RESULTS with 1 servers, buffer = 1, load = 1.0, assign strategy = random
+No. of users in the queue: 0 
+No. of arrivals = 9938 - No. of departures = 4979
+Load:  1.0
+Arrival rate:  1.9874957896187644  - Departure rate:  0.9957477899488657
+Rejects:  4959
+Average number of users:  0.49259719574680133
+Average delay:  0.4947007673219114
+Actual queue size:  0
+Loss probability:  49.89937613201852
+Busy time server # 0 2463.115120495797 % of sim time: 49.25971957468013
+Total assigned server # 0 4979 % 100.0
+___________________________________________________________________________________________
+
+-------- SIMULATION RESULTS with 1 servers, buffer = 1, load = 1.0, assign strategy = random
+No. of users in the queue: 1 
+No. of arrivals = 14990 - No. of departures = 7546
+Load:  1.0
+Arrival rate:  2.9978762539398764  - Departure rate:  1.5091377059526556
+Rejects:  7443
+Average number of users:  0.49508454113798966
+Average delay:  0.3280578963637142
+Actual queue size:  1
+Loss probability:  49.653102068045364
+Busy time server # 0 2475.524885960587 % of sim time: 49.50845411379896
+Total assigned server # 0 7547 % 100.01325205406837
+
+-------- SIMULATION RESULTS with 1 servers, buffer = 500, load = 1.0, assign strategy = random
+No. of users in the queue: 487 
+No. of arrivals = 15069 - No. of departures = 14536
+Load:  1.0
+Arrival rate:  3.013772749019824  - Departure rate:  2.9071737129041186
+Rejects:  46
+Average number of users:  288.9716225029747
+Average delay:  96.58271416054536
+Actual queue size:  487
+Loss probability:  0.30526245935363994
+Busy time server # 0 4810.64205371302 % of sim time: 96.21197111134819
+Total assigned server # 0 14537 % 100.00687947165657
+
+-------- SIMULATION RESULTS with 1 servers, buffer = 100000, load = 1.0, assign strategy = random
+No. of users in the queue: 514 
+No. of arrivals = 15076 - No. of departures = 14562
+Load:  1.0
+Arrival rate:  3.0151531596881442  - Departure rate:  2.912354756658182
+Rejects:  0
+Average number of users:  291.9615912956183
+Average delay:  97.13679891371024
+Actual queue size:  514
+Loss probability:  0.0
+Busy time server # 0 4811.553466113226 % of sim time: 96.22957439877776
+Total assigned server # 0 14563 % 100.006867188573
+
+______________________________________________________________________________________________
+
+
+-------- SIMULATION RESULTS with 1 servers, buffer = 100000, load = 1.0, assign strategy = random
+No. of users in the queue: 410 
+No. of arrivals = 10049 - No. of departures = 9639
+Load:  1.0
+Arrival rate:  2.0097316222024504  - Departure rate:  1.9277344120220339
+Rejects:  0
+Average number of users:  209.4166888422143
+Average delay:  104.33013469307785
+Actual queue size:  410
+Loss probability:  0.0
+Busy time server # 0 4777.10237443318 % of sim time: 95.53879693896677
+Total assigned server # 0 9640 % 100.01037452017844
+
+-------- SIMULATION RESULTS with 2 servers, buffer = 500, load = 1.0, assign strategy = random
+No. of users in the queue: 23 
+No. of arrivals = 14864 - No. of departures = 14841
+Load:  1.0
+Arrival rate:  2.9724584826657834  - Departure rate:  2.9678590111169867
+Rejects:  0
+Average number of users:  19.541670907102542
+Average delay:  6.5791478474873415
+Actual queue size:  23
+Loss probability:  0.0
+Busy time server # 0 2428.660768598238 % of sim time: 48.56763524715712
+Total assigned server # 0 7376 % 49.70015497607978
+Busy time server # 1 2450.6374766711947 % of sim time: 49.0071189146257
+Total assigned server # 1 7466 % 50.30658311434539
+
+quando provo less_cost
+
+Traceback (most recent call last):
+  File "queueMM1-ES.py", line 415, in <module>
+    arrival(time, FES, MM1, ASSIGN_STRATEGY)
+  File "queueMM1-ES.py", line 152, in arrival
+    scheduleDepartures(queue, time, FES, strategy)
+  File "queueMM1-ES.py", line 184, in scheduleDepartures
+    server = cluster.assignJob(strategy, time)
+  File "queueMM1-ES.py", line 116, in assignJob
+    server.startJob(time)
+  File "queueMM1-ES.py", line 78, in startJob
+    raise Exception("server " + str(self.index) + " is busy")
+Exception: server 0 is busy
+
+Ovviamente mettendo random e variando il server cost da 1, 2 a 1, 5. Il grafico è sempre lo stesso 
+
+-------- SIMULATION RESULTS with 1 servers, buffer = 100000, load = 1.0, assign strategy = random
+No. of users in the queue: 793 
+No. of arrivals = 30043 - No. of departures = 29250
+Load:  1.0
+Arrival rate:  3.004254444449612  - Departure rate:  2.9249556469111324
+Rejects:  0
+Average number of users:  470.97711741891965
+Average delay:  157.50675804448764
+Actual queue size:  793
+Loss probability:  0.0
+Busy time server # 0 9694.713671673744 % of sim time: 96.94566666375616
+Total assigned server # 0 29251 % 100.00341880341881
+
+
