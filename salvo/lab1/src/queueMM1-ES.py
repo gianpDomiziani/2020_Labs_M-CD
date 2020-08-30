@@ -15,10 +15,10 @@ import matplotlib.pyplot as plt
 # Server Possibilities 1 e 2
 # assign strategies: random - less_cost
 
-BUFFER_SIZES = [500]  # inf ~ 10e+5
+BUFFER_SIZES = [5000]  # inf ~ 10e+5
 N_SERVERS_POSSIBILITIES = [1]
 ASSIGN_STRATEGIES = ["random"]
-SERVER_COSTS = [1]
+SERVER_COSTS = [2]
 LOADS = np.arange(0.1, 3.1, 0.1)
 SIM_TIME = 5000
 SERVICES = [1, 2, 3]  # mu
