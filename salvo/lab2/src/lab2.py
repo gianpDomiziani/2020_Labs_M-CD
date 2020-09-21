@@ -102,7 +102,7 @@ class SwitchingServer(object):
         self.is_busy = True
 
     def getWaitingTime(self, time):
-        return max(self.finish_time - time, 0)
+        return max(self.finish_time - time, 0)   # time + time of charging - current time
 
     def finishJob(self, time):
         cost = 0
@@ -111,11 +111,11 @@ class SwitchingServer(object):
         self.jobs_history[-1]["end"] = time
         self.is_busy = False
         bth = 1
-        if ARRIVAL_BY_HOUR[math.floor(time/60)] <= INTER_ARRIVAL_BTH_THRESHOLD:
+        if ARRIVAL_BY_HOUR[math.floor(time/60)] <= INTER_ARRIVAL_BTH_THRESHOLD:  # high demand period
             bth = B_TH
         self.finish_time = time + (CHARGING_TIME * bth)
 
-        avg_charging_cost = np.mean(np.array(PRICES)/(10**6))*(CHARGING_TIME/60)*CHARGE_RATE*0.5*bth
+        avg_charging_cost = np.mean(np.array(PRICES)/(10**6))*(CHARGING_TIME/60)*CHARGE_RATE*0.5*bth 
 
         if (data.n_charging_postponed + 1)/data.dep <= F_MAX_POSTPONED:
             for shift in range(1, T_MAX):
@@ -126,15 +126,15 @@ class SwitchingServer(object):
                     return self.getTotalCost(remaining)
 
         remaining = pv_grid.predictPowerUsage(CHARGE_RATE, time, self.finish_time)
-        pv_grid.usePower(remaining, CHARGE_RATE, time, self.finish_time)
-        return self.getTotalCost(remaining)
+        pv_grid.usePower(remaining, CHARGE_RATE, time, self.finish_time) #update the available power in the PV panel for each minute
+        return self.getTotalCost(remaining) 
 
 
     def getTotalCost(self,remaining):
         cost = 0
         for min in range(0, len(remaining)):
             cost_per_minute = PRICES[math.floor(min/60)]/60
-            cost += cost_per_minute / (10**6) * remaining[min]
+            cost += cost_per_minute / (10**6) * remaining[min]   # se remaining è sempre 0 cost=0 
         return cost
 
 class PvGrid():
@@ -150,13 +150,13 @@ class PvGrid():
         for i in range(math.floor(start), math.ceil(end) + 1,1):
             self.available_power_by_min[i] -= (necessity - remaining[i])
             a = 1
-
+ 
     def predictPowerUsage(self, necessity, start, end):
         remaining = np.zeros(28*60)
         available = self.available_power_by_min.copy()
         for min in range(math.floor(start), math.ceil(end) + 1,1):
             if (available[min] < necessity):
-                remaining[min] = necessity - available[min]
+                remaining[min] = necessity - available[min] # remaining è la potenza che MI NECESSITA!
                 available[min] = 0
             else:
                 available[min] = available[min] - necessity
@@ -290,7 +290,7 @@ def saveAllResults(measures):
     f.close()
 
 def plotTransientPhase():
-    plt.plot(data.departure_times, data.delayes, ".-", label = "waiting delay")
+    plt.plot(data.departure_times, data.delayes, ".-", label = "waiting delay") # for each departurem it is considered the associated delay=time-arrival_time
     plt.plot(data.rejects_times, [0 for rej in data.rejects_times], ".", label="missed service")
     plt.legend()
     plt.xlabel("time (min)")
@@ -306,7 +306,7 @@ def confidenceIntervalWidth(sample):
     all_runs_ci.append(confidence_interval[1] - confidence_interval[0])
     return confidence_interval[1] - confidence_interval[0]
 
-def plotFisherman():
+def plotFisherman(): # to denote the Steady State
     df = pd.DataFrame({"delay":all_runs_delay_values,"min":[math.floor(min) for min in all_runs_departure_times]})
     dfAggregated = df.groupby("min").mean()
     plt.plot(dfAggregated.index, dfAggregated, ".-", label = "waiting delay")
